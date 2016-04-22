@@ -1,0 +1,9 @@
+1. Na área de administração do backoffice ir a Instalações -> Gestor de Instalações, indicar o ficheiro multibanco.zip e clicar em 'Carregar e instalar'.
+
+2. Ir a Components -> VirtueMart, no menu lateral Shop -> Payment Methods.
+
+3. Clicar em "New".
+
+4. Colocar o nome do método, em published colocar yes, seleccionar "VMPayment - Multibanco" em Payment Method e clicar Save.
+
+5. Configurar o método no separador Configuration.

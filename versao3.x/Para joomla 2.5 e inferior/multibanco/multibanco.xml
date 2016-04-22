@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<install version="1.5" type="plugin" group="vmpayment" >
+    <name>VMPAYMENT_MULTIBANCO</name>
+    <creationDate>February 2015</creationDate>
+    <author>Ifthenpay, Lda</author>
+    <authorUrl>http://www.ifthenpay.com</authorUrl>
+    <copyright>Copyright (C) 2005 Ifthenpay, Lda. All rights reserved.</copyright>
+    <license>http://www.gnu.org/licenses/gpl-3.0.html GNU/GPL</license>
+    <version>5.0</version>
+    <description>
+    </description>
+
+    <files>
+	<filename plugin="multibanco">multibanco.php</filename>
+    </files>
+    <params addpath="/administrator/components/com_virtuemart/elements">
+	<param type="vmjpluginwarning" />
+	<param   type="spacer" default="PARÂMETROS" level="level1" />
+
+
+        <!-- BY DEFAULT multibanco currency= vendor currency -->
+		<param	name="payment_logos" type="vmfiles" label="VMPAYMENT_STANDARD_LOGOS"
+		description="VMPAYMENT_STANDARD_LOGOS_DESC"
+		directory="/images/stories/virtuemart/payment"
+		default="default" hide_default="1" hide_none="1"
+		stripext="0"   exclude="^_" />
+	<param name="entidade" type="text"  label="Entidade" default="00000" description="Este dado será fornecido pela IFTHENPAY, assim que assine o contrato." />
+	<param name="subentidade" type="text"  label="Sub-Entidade" default="000" description="Este dado será fornecido pela IFTHENPAY, assim que assine o contrato." />
+	<param name="payment_currency" type="vmacceptedcurrency" default="" label="Moeda" description="Seleccione a opção Euro, pois o serviço só é válido em Portugal." />
+	<param name="status_pending" type="vmorderstate" scope="com_virtuemart" default="U" label="Estado" description="Estado da transação, antes de confirmada (seleccione Pending)" />
+	<param name="countries" type="vmcountries" scope="com_virtuemart" default="Portugal" label="VMPAYMENT_STANDARD_COUNTRIES" description="VMPAYMENT_STANDARD_COUNTRIES_DESC"/>
+	
+    </params>
+
+    <fieldset addpath="/administrator/components/com_virtuemart/elements">
+	<field type="vmjpluginwarning" />
+	<field type="spacer" default="VMPAYMENT_MULTIBANCO_FIELDS" level="level1" />
+	
+	<field name="entidade" type="text"  label="VMPAYMENT_MULTIBANCO_ENTIDADE" description="VMPAYMENT_MULTIBANCO_ENTIDADE_EXPLAIN" />
+	<field name="subentidade" type="text"  label="VMPAYMENT_MULTIBANCO_SUB-ENTIDADE" description="VMPAYMENT_MULTIBANCO_SUB-ENTIDADE_EXPLAIN" />	
+	<field name="payment_currency" type="vmacceptedcurrency" default="" label="VMPAYMENT_MULTIBANCO_CURRENCY" description="VMPAYMENT_MULTIBANCO_CURRENCY_DESC" />
+	<field name="status_pending" type="vmorderstate" scope="com_virtuemart" default="P" label="VMPAYMENT_MULTIBANCO_STATUS_PENDING" description="VMPAYMENT_MULTIBANCO_STATUS_PENDING_EXPLAIN" />
+	
+    </fieldset>
+</install>

@@ -1,0 +1,11 @@
+1. Instalar Joomla
+2. Instalar o VirtuMart
+3. Copiar e Colar as pastas "administrator" e "components". Quando pedir para substituir os ficheiros indique que sim.
+4. Ir para a zona de Administração do Joomla
+5. No menú superior da área de administração vá a Components > VirtueMart para aceder a área de administração do VirtueMart
+6. Na área de administração do VirtueMart vá a Store > Add Payment Method para criar um novo método de pagamento
+7. No Payment Method Form que vai abrir coloque o nome Multibanco no campo que diz Payment Method Name. (NOTA: O nome tem de ser mesmo Multibanco caso contrário não irá funcionar. O Multibanco é mesmo com a letra inicial em maiúscula).
+8. Ainda no mesmo local onde diz CODE colocar ITEMB e onde diz Payment Class Name escolha a opção ps_multibancos e no Payment Method Type escolha o HTML-Form based (e.g PayPal)
+9. Após isto guarde os dados clicando no botão SAVE.
+10. Após guardar, ainda no VirtueMart, vá a Store > List Payment Methods e procure pelo metodo de pagamento Multibanco. Clique nele para entra na área de configuração.
+11. Uma vez dentro da área de configuração clique na aba Configuration e preencha os dados entidade e sub-entidade com os dados fornecidos pela Ifthen no acto do contracto. 
