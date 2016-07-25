@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 if (!defined('_VALID_MOS') && !defined('_JEXEC')) die('Direct Access to '.basename(__FILE__).' is not allowed.');
 
@@ -40,7 +40,7 @@ class plgVmPaymentMultibanco extends vmPSPlugin {
         if (!$this->selectedThisElement($method->payment_element)) {
             return false;
         }
-        // 		$params = new JParameter($payment->payment_params);
+
         $lang = JFactory::getLanguage();
         $filename = 'com_virtuemart';
         $lang->load($filename, JPATH_ADMINISTRATOR);
@@ -64,8 +64,6 @@ class plgVmPaymentMultibanco extends vmPSPlugin {
         $dbValues['payment_name'] = $this->renderPluginName($method);
         $dbValues['order_number'] = $order['details']['BT']->order_number;
         $dbValues['virtuemart_paymentmethod_id'] = $this->_virtuemart_paymentmethod_id;
-        //$dbValues['order_number'] = $order['details']['BT']->virtuemart_order_id;
-        //$dbValues['virtuemart_paymentmethod_id'] = $cart->virtuemart_paymentmethod_id;
         $dbValues['entity'] = $method->entidade;
         $dbValues['payment_currency'] = $currency_code_3;
         $dbValues['value'] = $totalInPaymentCurrency;
@@ -213,42 +211,42 @@ class plgVmPaymentMultibanco extends vmPSPlugin {
     function plgVmDeclarePluginParamsPaymentVM3( & $data) {
         return $this->declarePluginParams('payment', $data);
     }
-    
+
     function plgVmOnPaymentNotification() {
         require_once(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'orders.php');
-        
+
         $chave = JRequest::getVar('chave');
         $entidade = JRequest::getVar('entidade');
         $referencia = JRequest::getVar('referencia');
         $orderID = substr($referencia, 3, 4);
         $order = VirtueMartModelOrders::getOrder($orderID);
-        
+
         if (!$order) {
             return false;
         }
-        
+
         $q = 'SELECT `payment_params` FROM `#__virtuemart_paymentmethods` WHERE `payment_params` LIKE "%entidade%" ';
         $db = &JFactory::getDBO();
         $db->setQuery($q);
-        
+
         $fetch = $db->loadResult();
         $details = explode("|", $fetch);
-        
+
         $chaveFetched = preg_replace('/^(\w)+=|"/', "", $details[2]);
-        
+
         if($chaveFetched == $chave)
         {
             $modelOrder = VmModel::getModel ('orders');
-            
+
             $orderArr = array();
             $orderArr["order_status"] = 'C';
-            
+
             try {
-                $modelOrder->updateStatusForOneOrder($orderID, $orderArr);                
+                $modelOrder->updateStatusForOneOrder($orderID, $orderArr);
             } catch(Exception $ex) {}
             return true;
         }
-        
+
         return false;
     }
 
@@ -286,13 +284,7 @@ function GenerateMbRef($ent_id, $subent_id, $order_id, $order_value, $email) {
     //Apenas sao considerados os 4 caracteres mais a direita do order_id
     $order_id = substr($order_id, (strlen($order_id) - 4), strlen($order_id));
 
-
-
-
-
     //cálculo dos check digits
-
-
     $chk_str = sprintf('%05u%03u%04u%08u', $ent_id, $subent_id, $order_id, round($order_value * 100));
 
     $chk_array = array(3, 30, 9, 90, 27, 76, 81, 34, 49, 5, 50, 15, 53, 45, 62, 38, 89, 17, 73, 51);
@@ -307,53 +299,49 @@ function GenerateMbRef($ent_id, $subent_id, $order_id, $order_value, $email) {
     $chk_digits = sprintf('%02u', 98 - $chk_val);
 
     if ($email == 'sim') {
-        return '<table cellpadding="3" width="300px" cellspacing="0" style="margin-top: 10px;border: 1px solid #45829F"><tr><td style="font-size: x-small; border-bottom: 1px solid #45829F; background-color: #45829F; color: White" colspan="3">Pagamento por Multibanco ou Homebanking</td></tr><tr><td rowspan="3"><img src="http://dl.dropbox.com/u/14494130/ifmb/imagensmodulos/mb.jpg" alt="" width="52" height="60"/></td><td style="font-size: x-small; font-weight:bold; text-align:left">Entidade:</td><td style="font-size: x-small; text-align:left">'.$ent_id.'</td></tr><tr><td style="font-size: x-small; font-weight:bold; text-align:left">Referência:</td><td style="font-size: x-small; text-align:left">'.$subent_id." ".substr($chk_str, 8, 3)." ".substr($chk_str, 11, 1).$chk_digits.'</td></tr><tr><td style="font-size: x-small; font-weight:bold; text-align:left">Valor:</td><td style="font-size: x-small; text-align:left">&euro;&nbsp; '.number_format($order_value, 2, ',', ' ').'</td></tr><tr><td style="font-size: xx-small;border-top: 1px solid #45829F; background-color: #45829F; color: White" colspan="3">O talão emitido pela caixa automática faz prova de pagamento. Conserve-o.</td></tr></table>';
+        return '<table cellpadding="3" width="300px" cellspacing="0" style="margin-top: 10px;border: 1px solid #45829F">
+                    <tr>
+                        <td style="font-size: x-small; border-bottom: 1px solid #45829F; background-color: #45829F; color: White" colspan="3">Pagamento por Multibanco ou Homebanking</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="3"><img src="http://dl.dropbox.com/u/14494130/ifmb/imagensmodulos/mb.jpg" alt="" width="52" height="60" />
+                        </td>
+                        <td style="font-size: x-small; font-weight:bold; text-align:left">Entidade:</td>
+                        <td style="font-size: x-small; text-align:left">'.$ent_id.'</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: x-small; font-weight:bold; text-align:left">Referência:</td>
+                        <td style="font-size: x-small; text-align:left">'.$subent_id." ".substr($chk_str, 8, 3)." ".substr($chk_str, 11, 1).$chk_digits.'</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: x-small; font-weight:bold; text-align:left">Valor:</td>
+                        <td style="font-size: x-small; text-align:left">&euro;&nbsp; '.number_format($order_value, 2, ',', ' ').'</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: xx-small;border-top: 1px solid #45829F; background-color: #45829F; color: White" colspan="3">O talão emitido pela caixa automática faz prova de pagamento. Conserve-o.</td>
+                    </tr>
+                </table>';
     } else {
         return '
-           <div style="
-    border: 1px solid #539FD1;
-    width: 300px;
-">
-  <div style="
-    text-align: center;
-    border-bottom: 1px solid #539FD1;
-    margin-left: 7px;
-    margin-right: 7px;
-">Pagamento por Referência Multibanco</div>
-  <div style="
-    margin-left: 35px;
-">
-  <div style="
-    float: left;
-"><img src="http://dl.dropbox.com/u/14494130/ifmb/imagensmodulos/mb.jpg" alt="" width="52" height="60" style="
-    padding-top: 2px;
-"></div>
-  <div style="
-    margin-left: 74px;
-">
-    <strong style="
-    margin-right: 10px;
-">Entidade: </strong>'.$ent_id.'<br>
-  <strong>Referência: </strong> '.$subent_id." ".substr($chk_str, 8, 3)." ".substr($chk_str, 11, 1).$chk_digits.'<br>
-<strong style="
-    margin-right: 37px;
-">Valor: </strong>&euro;&nbsp; '.number_format($order_value, 2, ',', ' ').'
-  </div>
-  </div>
-  
-  <div style="
-    text-align: center;
-    border-top: 1px solid #539FD1;
-    margin-left: 7px;
-    margin-right: 7px;
-    font-size: xx-small;
-">O talão emitido pela caixa automática faz prova de pagamento. Conserve-o.</div>
-</div>';
+            <div style="border: 1px solid #539FD1; width: 300px;">
+                <div style="text-align: center; border-bottom: 1px solid #539FD1; margin-left: 7px; margin-right: 7px;">
+                    Pagamento por Referência Multibanco
+                </div>
+                <div style="margin-left: 35px;">
+                    <div style="float: left;">
+                        <img class="mbImage" src="http://dl.dropbox.com/u/14494130/ifmb/imagensmodulos/mb.jpg" alt="" width="52" height="60" style="padding-top: 2px;">
+                    </div>
+                    <div style="margin-left: 74px;">
+                        <strong style="margin-right: 10px;">Entidade: </strong>'.$ent_id.'<br>
+                        <strong>Referência: </strong> '.$subent_id." ".substr($chk_str, 8, 3)." ".substr($chk_str, 11, 1).$chk_digits.'<br>
+                        <strong style="margin-right: 37px;">Valor: </strong>&euro;&nbsp; '.number_format($order_value, 2, ',', ' ').'
+                    </div>
+                </div>
+                <div style="text-align: center; border-top: 1px solid #539FD1; margin-left: 7px; margin-right: 7px; font-size: xx-small;">
+                    O talão emitido pela caixa automática faz prova de pagamento. Conserve-o.
+                </div>
+            </div>';
     }
-
-
-
-
 }
 
 function format_number($number) {
