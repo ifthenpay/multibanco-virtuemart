@@ -326,7 +326,7 @@ function GenerateMbRef($ent_id, $subent_id, $order_id, $order_value, $email) {
   <div style="
     float: left;
 "><img src="http://dl.dropbox.com/u/14494130/ifmb/imagensmodulos/mb.jpg" alt="" width="52" height="60" style="
-    padding-top: 9px;
+    padding-top: 2px;
 "></div>
   <div style="
     margin-left: 74px;
