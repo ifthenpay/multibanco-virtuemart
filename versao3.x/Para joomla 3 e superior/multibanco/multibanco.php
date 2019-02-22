@@ -22,13 +22,12 @@ class plgVmPaymentMultibanco extends vmPSPlugin {
         $this->setConfigParameterable($this->_configTableFieldName, $varsToPush);
     }
 
-
     protected function getVmPluginCreateTableSQL() {
         return $this->createTableSQL('Payment Multibanco Table');
     }
 
     function getTableSQLFields() {
-        $SQLfields = array('id' => 'int(1) unsigned NOT NULL AUTO_INCREMENT', 'virtuemart_order_id' => 'int(11) UNSIGNED DEFAULT NULL', 'order_number' => 'char(32) DEFAULT NULL', 'virtuemart_paymentmethod_id' => 'mediumint(1) UNSIGNED DEFAULT NULL', 'payment_name' => 'char(255) NOT NULL DEFAULT \'\' ', 'payment_currency' => 'char(3) ', 'entity' => ' char(10)  DEFAULT NULL', 'subentity' => ' char(10)  DEFAULT NULL', 'value' => ' decimal(15,5) NOT NULL DEFAULT \'0.00\' ', 'tax_id' => 'smallint(11) DEFAULT NULL');
+        $SQLfields = array('id' => 'int(1) unsigned NOT NULL AUTO_INCREMENT', 'virtuemart_order_id' => 'int(11) UNSIGNED DEFAULT NULL', 'order_number' => 'char(32) DEFAULT NULL', 'virtuemart_paymentmethod_id' => 'mediumint(1) UNSIGNED DEFAULT NULL', 'payment_name' => 'char(255) NOT NULL DEFAULT \'\' ', 'payment_currency' => 'char(3) ', 'entity' => ' char(10)  DEFAULT NULL', 'subentity' => ' char(10)  DEFAULT NULL', 'referencia' => ' char(10)  DEFAULT NULL', 'value' => ' decimal(15,5) NOT NULL DEFAULT \'0.00\' ', 'tax_id' => 'smallint(11) DEFAULT NULL', 'estado' => 'smallint(1) DEFAULT 0');
 
         return $SQLfields;
     }
@@ -59,6 +58,7 @@ class plgVmPaymentMultibanco extends vmPSPlugin {
         $totalInPaymentCurrency = round($paymentCurrency->convertCurrencyTo($method->payment_currency, $order['details']['BT']->order_total, false), 2);
         $cd = CurrencyDisplay::getInstance($cart->pricesCurrency);
 
+        $subent = $method->subentidade;
 
         $this->_virtuemart_paymentmethod_id = $order['details']['BT']->virtuemart_paymentmethod_id;
         $dbValues['payment_name'] = $this->renderPluginName($method);
@@ -68,13 +68,14 @@ class plgVmPaymentMultibanco extends vmPSPlugin {
         $dbValues['payment_currency'] = $currency_code_3;
         $dbValues['value'] = $totalInPaymentCurrency;
         $dbValues['subentity'] = $method->subentidade;
+        $dbValues['referencia'] = GenerateMbRef($dbValues['entity'], $subent, $order['details']['BT']->virtuemart_order_id, $dbValues['value'], 'refonly');
         $dbValues['tax_id'] = 0;
         $this->storePSPluginInternalData($dbValues);
 
-        $subent = $method->subentidade;
 
-        $html = GenerateMbRef($dbValues['entity'], $subent, $order['details']['BT']->virtuemart_order_id, $dbValues['value'], 'sim');
-        $html2 = GenerateMbRef($dbValues['entity'], $subent, $order['details']['BT']->virtuemart_order_id, $dbValues['value'], 'nao');
+
+        $html = GenerateMbRef($dbValues['entity'], $subent, $order['details']['BT']->virtuemart_order_id, $dbValues['value'], 'email');
+        $html2 = GenerateMbRef($dbValues['entity'], $subent, $order['details']['BT']->virtuemart_order_id, $dbValues['value'], 'front');
 
 
         $modelOrder = VmModel::getModel('orders');
@@ -85,6 +86,7 @@ class plgVmPaymentMultibanco extends vmPSPlugin {
         $order['comments'] = $html;
         $modelOrder->updateStatusForOneOrder($order['details']['BT']->virtuemart_order_id, $order, true);
 
+		
         //We delete the old stuff
         $cart->emptyCart();
         JRequest::setVar('html', $html2);
@@ -110,14 +112,20 @@ class plgVmPaymentMultibanco extends vmPSPlugin {
             vmWarn(500, $q." ".$db->getErrorMsg());
             //return '';
         }
+        
         $this->getPaymentCurrency($paymentTable);
 
         $html = '<table class="adminlist">'."\n";
         $html .= $this->getHtmlHeaderBE();
         $html .= $this->getHtmlRowBE('STANDARD_PAYMENT_NAME', $paymentTable->payment_name);
-        $html .= $this->getHtmlRowBE('STANDARD_PAYMENT_TOTAL_CURRENCY', $paymentTable->value.' €');
         $html .= '</table>'."\n";
-        $html .= GenerateMbRef($paymentTable->entity, $paymentTable->subentity, $paymentTable->virtuemart_order_id, $paymentTable->value, 'nao');
+        /*$html .= '<div style="font-family:Arial;font-size:10pt;width: 200px;border: 1px solid #2e99d4;">
+					<img src="https://ifthenpay.com/mb.png" style="height:80px;width:80px;display: block;margin-left: auto;margin-right: auto;">
+					<p style="line-height: 1.8;padding: 2px 20px;">Entidade:&nbsp;&nbsp;<span style="float: right"><b>'.$paymentTable->entity.'</b></span><br>
+					Referência:&nbsp;&nbsp;<span style="float: right"><b>'.$paymentTable->referencia.'</b></span><br>
+					Valor:&nbsp;&nbsp;<span style="float: right"><b>'.number_format($paymentTable->value, 2).'</b></span></p>
+				</div>';*/
+				
         return $html;
     }
 
@@ -197,7 +205,7 @@ class plgVmPaymentMultibanco extends vmPSPlugin {
 
 
     function plgVmonShowOrderPrintPayment($order_number, $method_id) {
-        return $this->onShowOrderPrint($order_number, $method_id);
+        return 'abab';
     }
 
     function plgVmDeclarePluginParamsPayment($name, $id, & $data) {
@@ -215,18 +223,39 @@ class plgVmPaymentMultibanco extends vmPSPlugin {
     function plgVmOnPaymentNotification() {
         require_once(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'orders.php');
 
-        $chave = JRequest::getVar('chave');
-        $entidade = JRequest::getVar('entidade');
-        $referencia = JRequest::getVar('referencia');
+        $parameter = $_GET;
+
+        if(empty($parameter['plg']))
+            return false;
+
+        if($parameter['plg']!='ifthenpay')
+            return false;
+
+        if(empty($parameter['chave']) || empty($parameter['entidade']) || empty($parameter['referencia']) || empty($parameter['valor']))
+            return false;
+
+        $chave = $parameter['chave'];
+        $entidade = $parameter['entidade'];
+        $referencia = $parameter['referencia'];
+        $valor = $parameter['valor'];
         $orderID = substr($referencia, 3, 4);
-        $order = VirtueMartModelOrders::getOrder($orderID);
+
+        $db = &JFactory::getDBO();
+
+        $q = 'SELECT id, virtuemart_order_id FROM `' . $this->_tablename . '` WHERE entity = ' . $db->quote($entidade,true) . ' AND referencia = ' . $db->quote($referencia,true) . ' AND value like \'%' . $db->escape($valor) . '%\' AND estado = 0 ORDER BY modified_on DESC';
+        $db->setQuery($q, 0, 1);
+        $callback_fetch = $db->loadRow();
+
+        if(empty($callback_fetch))
+            return false;
+
+        $order = VirtueMartModelOrders::getOrder($callback_fetch[1]);
 
         if (!$order) {
             return false;
         }
 
         $q = 'SELECT `payment_params` FROM `#__virtuemart_paymentmethods` WHERE `payment_params` LIKE "%entidade%" ';
-        $db = &JFactory::getDBO();
         $db->setQuery($q);
 
         $fetch = $db->loadResult();
@@ -243,6 +272,10 @@ class plgVmPaymentMultibanco extends vmPSPlugin {
 
             try {
                 $modelOrder->updateStatusForOneOrder($orderID, $orderArr);
+
+                $db->setQuery('UPDATE `' . $this->_tablename . '` SET estado = 1 WHERE id = ' .$callback_fetch[0].' AND virtuemart_order_id = ' .$callback_fetch[1].' AND estado = 0');
+                $db->execute();
+
             } catch(Exception $ex) {}
             return true;
         }
@@ -253,7 +286,7 @@ class plgVmPaymentMultibanco extends vmPSPlugin {
 }
 
 
-function GenerateMbRef($ent_id, $subent_id, $order_id, $order_value, $email) {
+function GenerateMbRef($ent_id, $subent_id, $order_id, $order_value, $tipo) {
     if (strlen($ent_id) < 5) {
         echo "Lamentamos mas tem de indicar uma entidade válida";
         return;
@@ -298,50 +331,27 @@ function GenerateMbRef($ent_id, $subent_id, $order_id, $order_value, $email) {
 
     $chk_digits = sprintf('%02u', 98 - $chk_val);
 
-    if ($email == 'sim') {
-        return '<table cellpadding="3" width="300px" cellspacing="0" style="margin-top: 10px;border: 1px solid #45829F">
-                    <tr>
-                        <td style="font-size: x-small; border-bottom: 1px solid #45829F; background-color: #45829F; color: White" colspan="3">Pagamento por Multibanco ou Homebanking</td>
-                    </tr>
-                    <tr>
-                        <td rowspan="3"><img src="http://dl.dropbox.com/u/14494130/ifmb/imagensmodulos/mb.jpg" alt="" width="52" height="60" />
-                        </td>
-                        <td style="font-size: x-small; font-weight:bold; text-align:left">Entidade:</td>
-                        <td style="font-size: x-small; text-align:left">'.$ent_id.'</td>
-                    </tr>
-                    <tr>
-                        <td style="font-size: x-small; font-weight:bold; text-align:left">Referência:</td>
-                        <td style="font-size: x-small; text-align:left">'.$subent_id." ".substr($chk_str, 8, 3)." ".substr($chk_str, 11, 1).$chk_digits.'</td>
-                    </tr>
-                    <tr>
-                        <td style="font-size: x-small; font-weight:bold; text-align:left">Valor:</td>
-                        <td style="font-size: x-small; text-align:left">&euro;&nbsp; '.number_format($order_value, 2, ',', ' ').'</td>
-                    </tr>
-                    <tr>
-                        <td style="font-size: xx-small;border-top: 1px solid #45829F; background-color: #45829F; color: White" colspan="3">O talão emitido pela caixa automática faz prova de pagamento. Conserve-o.</td>
-                    </tr>
-                </table>';
-    } else {
-        return '
-            <div style="border: 1px solid #539FD1; width: 300px;">
-                <div style="text-align: center; border-bottom: 1px solid #539FD1; margin-left: 7px; margin-right: 7px;">
-                    Pagamento por Referência Multibanco
-                </div>
-                <div style="margin-left: 35px;">
-                    <div style="float: left;">
-                        <img class="mbImage" src="http://dl.dropbox.com/u/14494130/ifmb/imagensmodulos/mb.jpg" alt="" width="52" height="60" style="padding-top: 2px;">
-                    </div>
-                    <div style="margin-left: 74px;">
-                        <strong style="margin-right: 10px;">Entidade: </strong>'.$ent_id.'<br>
-                        <strong>Referência: </strong> '.$subent_id." ".substr($chk_str, 8, 3)." ".substr($chk_str, 11, 1).$chk_digits.'<br>
-                        <strong style="margin-right: 37px;">Valor: </strong>&euro;&nbsp; '.number_format($order_value, 2, ',', ' ').'
-                    </div>
-                </div>
-                <div style="text-align: center; border-top: 1px solid #539FD1; margin-left: 7px; margin-right: 7px; font-size: xx-small;">
-                    O talão emitido pela caixa automática faz prova de pagamento. Conserve-o.
-                </div>
-            </div>';
+    if ($tipo == 'email') {
+        return '<div style="font-family:Arial;font-size:10pt;width: 200px;">
+					<img src="https://ifthenpay.com/mb.png" style="height:80px;width:80px;display: block;margin-left: auto;margin-right: auto;">
+					<p style="line-height: 1;padding: 2px 20px;">&nbsp;&nbsp;Entidade:&nbsp;&nbsp;<span style="float: right"><b>'.$ent_id.'</b></span><br>
+					&nbsp;&nbsp;Referência:&nbsp;&nbsp;<span style="float: right"><b>'.$subent_id." ".substr($chk_str, 8, 3)." ".substr($chk_str, 11, 1).$chk_digits.'</b></span><br>
+					&nbsp;&nbsp;Valor:&nbsp;&nbsp;<span style="float: right"><b>'.number_format($order_value, 2, ',', ' ').'</b></span></p>
+				</div>';
+				
+    } else if ($tipo == 'front') {
+        return '<p>Pagamento por Multibanco ou Homebanking</p>
+				<div style="font-family:Arial;font-size:10pt;width: 200px;border: 0px solid #2e99d4;">
+					<img src="https://ifthenpay.com/mb.png" style="height:80px;width:80px;display: block;margin-left: auto;margin-right: auto;">
+					<p style="line-height: 1.5;padding: 2px 20px;">Entidade:&nbsp;&nbsp;<span style="float: right"><b>'.$ent_id.'</b></span><br>
+					Referência:&nbsp;&nbsp;<span style="float: right"><b>'.$subent_id." ".substr($chk_str, 8, 3)." ".substr($chk_str, 11, 1).$chk_digits.'</b></span><br>
+					Valor:&nbsp;&nbsp;<span style="float: right"><b>'.number_format($order_value, 2, ',', ' ').'</b></span></p>
+				</div>';
+    } else if ($tipo == 'refonly'){
+        return $subent_id . substr($chk_str, 8, 3) . substr($chk_str, 11, 1).$chk_digits;
     }
+
+    return "";
 }
 
 function format_number($number) {
