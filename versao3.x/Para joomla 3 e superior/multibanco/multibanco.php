@@ -238,7 +238,7 @@ class plgVmPaymentMultibanco extends vmPSPlugin {
         $entidade = $parameter['entidade'];
         $referencia = $parameter['referencia'];
         $valor = $parameter['valor'];
-        $orderID = substr($referencia, 3, 4);
+        // $orderID = substr($referencia, 3, 4);
 
         $db = &JFactory::getDBO();
 
@@ -271,7 +271,7 @@ class plgVmPaymentMultibanco extends vmPSPlugin {
             $orderArr["order_status"] = 'C';
 
             try {
-                $modelOrder->updateStatusForOneOrder($orderID, $orderArr);
+                $modelOrder->updateStatusForOneOrder($callback_fetch[1], $orderArr);
 
                 $db->setQuery('UPDATE `' . $this->_tablename . '` SET estado = 1 WHERE id = ' .$callback_fetch[0].' AND virtuemart_order_id = ' .$callback_fetch[1].' AND estado = 0');
                 $db->execute();
