@@ -1,3 +1,10 @@
+# ❌ Warning version deprecation
+
+    This version will not receive updates, bug fixes, or security patches.
+    This version will not receive technical support.
+    It is strongly recommended to upgrade to joomla's 3 and 4 most recent available extensions.
+Most recent versions available at [GitHub](https://github.com/ifthenpay/joomla-virtuemart)
+
 Ifthenpay module for Virtuemart
 ==============
 ![Multibanco](https://raw.githubusercontent.com/ifthenpay/omnipay-ifthenpay/master/mb.png)
